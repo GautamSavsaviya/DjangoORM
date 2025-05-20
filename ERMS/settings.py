@@ -76,8 +76,12 @@ WSGI_APPLICATION = 'ERMS.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'test',
+        'USER': 'root',
+        'PASSWORD': 'Gau@#sav1702',
+        'HOST': 'localhost',
+        'PORT': 3306
     }
 }
 

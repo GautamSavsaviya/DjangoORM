@@ -2,115 +2,76 @@ from django.db import models
 
 
 # Create your models here.
-class Department(models.Model):
-    name = models.CharField(max_length=100)
-    location = models.CharField(max_length=100)
-
-    def __str__(self):
-        return self.name
-
-
-class Employee(models.Model):
-    first_name = models.CharField(max_length=50)
-    last_name = models.CharField(max_length=50)
-    email = models.EmailField(unique=True)
-    mno = models.BigIntegerField()
-    hire_date = models.DateField(auto_now_add=True)
-    is_active = models.BooleanField(default=False)
-    department = models.ForeignKey(Department, on_delete=models.CASCADE)
-    manager = models.ForeignKey(
-        "self", on_delete=models.SET_NULL, null=True, blank=True, related_name="employee_manager"
+class Author(models.Model):
+    firstname = models.CharField(max_length=100)
+    lastname = models.CharField(max_length=100)
+    address = models.CharField(max_length=200, null=True)
+    zipcode = models.IntegerField(null=True)
+    tel_no = models.CharField(max_length=100, null=True)
+    recommend_by = models.ForeignKey(
+        "Author",
+        on_delete=models.CASCADE,
+        related_name="recommend_author",
+        related_query_name="recommend_author",
+        null=True
     )
-    salary = models.IntegerField()
-    job_title = models.CharField(max_length=100)
-    address = models.TextField()
+    join_date = models.DateField()
+    popularity_score = models.IntegerField()
+    followers = models.ManyToManyField(
+        "User", related_name="followed_authors", related_query_name="followed_authors"
+    )
 
     def __str__(self):
-        return self.first_name + self.last_name
+        return self.firstname + " " + self.lastname
 
 
-class Project(models.Model):
-    name = models.CharField(max_length=50)
-    budget = models.IntegerField()
-    department = models.ForeignKey(Department, on_delete=models.CASCADE)
-    members = models.ManyToManyField(Employee, through="ProjectAssignment")
-
-    def __str__(self):
-        return self.name
-
-
-class ProjectAssignment(models.Model):
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    assigned_date = models.DateField(auto_now=False, auto_now_add=True)
-    role = models.CharField(max_length=20)
-
-    def __str__(self):
-        return f"{self.employee} → {self.project} ({self.role})"
-
-
-class Task(models.Model):
+class Books(models.Model):
     title = models.CharField(max_length=100)
-    desc = models.TextField()
-    status = models.CharField(
-        max_length=4, choices=[("TD", "todo"), ("IP", "in-progress"), ("DONE", "done")]
+    genre = models.CharField(max_length=200)
+    price = models.IntegerField(null=True)
+    published_date = models.DateField()
+    author = models.ForeignKey(
+        "Author",
+        on_delete=models.CASCADE,
+        related_name="books",
+        related_query_name="books",
     )
-    assign_to = models.ForeignKey(Employee, on_delete=models.CASCADE)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    due_date = models.DateTimeField(auto_now=False, auto_now_add=False)
-    complated_date = models.DateTimeField(auto_now=False, auto_now_add=False)
+    publisher = models.ForeignKey(
+        "Publisher",
+        on_delete=models.CASCADE,
+        related_name="books",
+        related_query_name="books",
+    )
 
     def __str__(self):
         return self.title
 
 
-class LeaveRequest(models.Model):
-    emolpyee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='leave_employee')
-    start_date = models.DateField()
-    end_date = models.DateField()
-    reason = models.TextField()
-    approved_by = models.ForeignKey(
-        Employee, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_employee'
-    )
-    status = models.CharField(
-        max_length=50,
-        choices=[
-            ("APPROVED", "approved"),
-            ("PENDING", "pending"),
-            ("REJECTED", "rejected"),
-        ],
-    )
+class Publisher(models.Model):
+    firstname = models.CharField(max_length=100)
+    lastname = models.CharField(max_length=100)
+    recommendedby = models.ForeignKey("Publisher", on_delete=models.CASCADE, null=True)
+    joindate = models.DateField()
+    popularity_score = models.IntegerField()
 
     def __str__(self):
-        return self.emolpyee
+        return self.firstname + " " + self.lastname
 
 
-class Appraisal(models.Model):
-    emolpyee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='appraisal')
-    reviewer = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='reviewer')
-    review_date = models.DateField()
-    score = models.IntegerField()
-    comments = models.TextField()
+class User(models.Model):
+    username = models.CharField(max_length=100)
+    email = models.EmailField(max_length=100)
 
     def __str__(self):
-        return self.employee
+        return self.username
 
 
-class Asset(models.Model):
-    name = models.CharField(max_length=100)
-    serial_number = models.IntegerField()
-    purchase_date = models.DateField()
-    assigned_to = models.ForeignKey(
-        Employee, on_delete=models.SET_NULL, null=True, blank=True
+class Skill(models.Model):
+    skill = models.CharField(max_length=50)
+
+
+class Person(models.Model):
+    person = models.CharField(max_length=50)
+    skill = models.ForeignKey(
+        Skill, on_delete=models.CASCADE, related_name="person_skill"
     )
-
-    def __str__(self):
-        return self.name
-    
-class Payroll(models.Model):
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
-    month = models.DateField()
-    base_salary = models.IntegerField()
-    bonus = models.IntegerField()
-    deductions = models.IntegerField()
-    net_salary = models.IntegerField()
